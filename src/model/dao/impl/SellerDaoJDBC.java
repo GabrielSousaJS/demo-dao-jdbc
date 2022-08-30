@@ -23,22 +23,35 @@ public class SellerDaoJDBC implements SellerDao {
     @Override
     public void insert(Seller obj) {
 
+        // Como não uma inserção e não uma busca de dados, não será necessário o ResultSet.
         PreparedStatement st = null;
 
         try {
+            // Ao final do comando SQL é utilizado o Statment.RETURN_GENERATED_KEYS, para que o st possua a chave
+            // primária da nova tupla.
             st = conn.prepareStatement("insert into seller (Name, Email, BirthDate, BaseSalary, DepartmentId) values (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 
+            // Após o objeto st está pronto, basta inserir os dados a partir do objeto Seller.
             st.setString(1, obj.getName());
             st.setString(2, obj.getEmail());
+            // Como o padrão de data é SQL, é preciso utilizar o pacote Date do sql, posteriormente utilizar o getTime
+            // para que não haja erros de tipo
             st.setDate(3, new java.sql.Date(obj.getBirthDate().getTime()));
             st.setDouble(4, obj.getBaseSalaray());
             st.setInt(5, obj.getDepartment().getId());
 
+            // Posteriormente irá verificar quantas linhas foram afetadas.
             int rowsAffected = st.executeUpdate();
 
+            // Irá verificar se ouve linhas afetadas, caso o resultado seja negativo, irá propagar uma exceção.
             if (rowsAffected > 0) {
+                // A chave primária gerada a partir do novo objeto é atribuido ao resultSet
                 ResultSet rs = st.getGeneratedKeys();
+                // Como é apenas uma linha, pois se trata de um insert. É utilizado o if e não o while.
                 if (rs.next()) {
+                    // Como o ResultSet está apenas com a chave primária da nova tupla, ela é a primeira coluna.
+                    // Está parte é utilizada para que de imediato o objeto receba sua chave primária, não ficando
+                    // desconhecida.
                     int id = rs.getInt(1);
                     obj.setId(id);
                 }
